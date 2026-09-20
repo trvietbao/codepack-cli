@@ -32,12 +32,14 @@ When working with **OpenAI Codex**, **ChatGPT**, or **Claude**, feeding codebase
 
 - **Zero External Dependencies**: Built entirely on standard Python 3.8+ libraries. Runs anywhere instantly.
 - **🛡️ Built-in Secret Sanitization**: Detects and redacts OpenAI API keys (`sk-...`), GitHub PATs (`ghp_...`), AWS credentials, Bearer tokens, and private keys by default before they ever reach an LLM.
+- **Prompt Templates**: Prepend battle-tested LLM prompt templates (`--template review`, `audit`, `explain`, `refactor`, `test-gen`, or a custom prompt file) directly before the packed codebase.
+- **Project Configuration**: Save project defaults in `.codepackrc`, `codepack.json`, or `pyproject.toml` so team members do not need to repeatedly pass long CLI arguments.
 - **Smart Ignore Engine**: Automatically respects `.gitignore`, skipping package locks (`package-lock.json`, `poetry.lock`), binary files, virtual environments, and build artifacts.
 - **Accurate Token Estimation**: Fast BPE-calibrated token estimator designed for OpenAI GPT-4 / Codex context windows.
 - **Visual Directory Tree**: Generates an ASCII/Unicode hierarchy tree showing file sizes and estimated token consumption per module.
 - **Multiple Output Formats**: Export to Markdown (with language-specific code fences), prompt-optimized XML tags, or structured JSON.
 - **Direct Clipboard Copying**: Use `-c` or `--copy` to copy directly to your OS clipboard (macOS, Linux, Windows).
-- **Python Library API**: Seamlessly integrate codebase packing into your own Python agents, tools, or data pipelines.
+- **PEP 561 Typed**: Includes `py.typed` marker with comprehensive type annotations for seamless editor autocomplete and mypy verification.
 
 ---
 
@@ -64,9 +66,9 @@ pip install git+https://github.com/trvietbao/codepack-cli.git
 codepack . -o prompt.md
 ```
 
-### 2. Copy directly to clipboard
+### 2. Pack with an LLM Code Review Template and copy to clipboard
 ```bash
-codepack . --copy
+codepack . --template review --copy
 ```
 
 ### 3. Inspect directory tree and token breakdown
@@ -97,11 +99,51 @@ codepack . --include "*.py,*.ts" --exclude "tests/*" -o prompt.md
 
 ---
 
+## Prompt Templates
+
+`codepack-cli` includes built-in developer prompt templates designed for OpenAI Codex and GPT-4 workflows:
+
+| Template | Flag | Description |
+| :--- | :--- | :--- |
+| **Code Review** | `-t review` | Modular architecture, potential bugs, security vulnerabilities, and code quality suggestions. |
+| **Security Audit** | `-t audit` | Vulnerability assessment for injection, auth, input sanitization, and insecure defaults. |
+| **Codebase Explanation** | `-t explain` | Entrypoints, state flow, dependencies, and onboarding walkthrough. |
+| **Refactoring** | `-t refactor` | Targeted recommendations to reduce coupling, eliminate duplication, and modernize patterns. |
+| **Test Generation** | `-t test-gen` | Unit tests for uncovered branches and edge cases using AAA pattern. |
+| **Custom Template** | `-t ./prompt.txt` | Load instructions from any local file. |
+
+---
+
+## Configuration File
+
+You can store recurring settings in `.codepackrc` or `codepack.json` at your project root:
+
+```json
+{
+  "format": "markdown",
+  "sanitize": true,
+  "max_size_kb": 300,
+  "template": "review",
+  "exclude": ["tests/fixtures/*", "docs/*"]
+}
+```
+
+Or inside `pyproject.toml`:
+
+```toml
+[tool.codepack]
+format = "markdown"
+sanitize = true
+template = "review"
+```
+
+---
+
 ## CLI Reference
 
 ```text
-usage: codepack [path] [-o OUTPUT] [-f {markdown,xml,json}] [--tree-only]
-                [--stats] [--no-sanitize] [--include INCLUDE]
+usage: codepack [path] [-o OUTPUT] [-f {markdown,xml,json}] [-t TEMPLATE]
+                [--tree-only] [--stats] [--no-sanitize] [--include INCLUDE]
                 [--exclude EXCLUDE] [--max-size MAX_SIZE] [-c] [-v]
 
 Pack your codebase into clean, LLM-optimized context for OpenAI Codex & Claude.
@@ -112,6 +154,7 @@ positional arguments:
 options:
   -o, --output OUTPUT   Save packed context to specified file path
   -f, --format FORMAT   Output format: markdown, xml, json (default: markdown)
+  -t, --template TEXT   Prepend LLM prompt template (review, audit, explain, refactor, test-gen, or file)
   --tree-only           Print only directory tree structure and token summary
   --stats               Display file-by-file size, line, and token statistics
   --no-sanitize         Disable automatic credential & secret redaction
