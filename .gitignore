@@ -70,3 +70,6 @@ output/
 *.codepack.md
 *.codepack.xml
 *.codepack.json
+
+# Sister projects
+schemacraft/
