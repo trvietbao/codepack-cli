@@ -63,13 +63,25 @@ def load_gitignore(base_dir: Path) -> List[str]:
 
 
 def is_binary_file(filepath: Path) -> bool:
-    """Detect if file is binary by checking for null bytes in initial chunk."""
+    """Detect binary files using git-style null byte inspection."""
     try:
         with open(filepath, "rb") as f:
-            chunk = f.read(1024)
+            chunk = f.read(8192)
+            # Null bytes strongly indicate compiled or non-text format
             return b"\x00" in chunk
     except OSError:
         return True
+
+
+def read_text_safe(filepath: Path) -> str:
+    """Read file content with UTF-8, UTF-8-SIG, and Latin-1 fallbacks."""
+    raw = filepath.read_bytes()
+    for enc in ("utf-8", "utf-8-sig", "latin-1"):
+        try:
+            return raw.decode(enc)
+        except UnicodeDecodeError:
+            continue
+    return raw.decode("utf-8", errors="replace")
 
 
 def scan_directory(

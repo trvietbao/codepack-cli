@@ -6,11 +6,12 @@ from pathlib import Path
 import os
 
 from codepack.config import DEFAULT_MAX_FILE_SIZE
-from codepack.scanner import scan_directory
+from codepack.scanner import scan_directory, read_text_safe
 from codepack.sanitizer import SecretSanitizer
 from codepack.tokenizer import FileStats, compute_file_stats, estimate_tokens
 from codepack.tree import render_tree
 from codepack.formatter import PackedFile, format_markdown, format_xml, format_json
+from codepack.templates import get_template
 
 __version__ = "0.1.0"
 __all__ = ["CodePacker", "PackResult", "pack_codebase", "__version__"]
@@ -38,11 +39,13 @@ class CodePacker:
         max_file_size: int = DEFAULT_MAX_FILE_SIZE,
         include_patterns: Optional[List[str]] = None,
         exclude_patterns: Optional[List[str]] = None,
+        template: Optional[str] = None,
     ) -> None:
         self.sanitize = sanitize
         self.max_file_size = max_file_size
         self.include_patterns = include_patterns or []
         self.exclude_patterns = exclude_patterns or []
+        self.template_text = get_template(template)
         self.sanitizer = SecretSanitizer() if sanitize else None
 
     def pack(self, target_path: str, output_format: str = "markdown") -> PackResult:
@@ -66,7 +69,7 @@ class CodePacker:
         for rel in rel_paths:
             full_path = path_obj / rel if path_obj.is_dir() else path_obj
             try:
-                raw_text = full_path.read_text(encoding="utf-8", errors="replace")
+                raw_text = read_text_safe(full_path)
             except OSError:
                 continue
 
@@ -95,6 +98,11 @@ class CodePacker:
         else:
             content = format_markdown(root_name, tree_str, packed_files, total_tokens, total_bytes, total_lines, all_redactions)
 
+        # Prepend developer prompt template if configured
+        if self.template_text:
+            content = f"{self.template_text.strip()}\n\n{content}"
+            total_tokens += estimate_tokens(self.template_text)
+
         return PackResult(
             content=content,
             directory_tree=tree_str,
@@ -114,6 +122,7 @@ def pack_codebase(
     max_file_size: int = DEFAULT_MAX_FILE_SIZE,
     include_patterns: Optional[List[str]] = None,
     exclude_patterns: Optional[List[str]] = None,
+    template: Optional[str] = None,
 ) -> PackResult:
     """Convenience function to pack a codebase into an LLM context bundle."""
     packer = CodePacker(
@@ -121,5 +130,6 @@ def pack_codebase(
         max_file_size=max_file_size,
         include_patterns=include_patterns,
         exclude_patterns=exclude_patterns,
+        template=template,
     )
     return packer.pack(target_path, output_format=output_format)

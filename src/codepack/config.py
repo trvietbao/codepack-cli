@@ -122,3 +122,47 @@ LANGUAGE_EXTENSIONS: Dict[str, str] = {
 
 # Maximum default file size in bytes (500 KB)
 DEFAULT_MAX_FILE_SIZE: int = 500 * 1024
+
+
+def load_project_config(base_dir) -> dict:
+    """Load configuration from .codepackrc, codepack.json, or pyproject.toml."""
+    from pathlib import Path
+    import json
+
+    target = Path(base_dir).resolve()
+    if target.is_file():
+        target = target.parent
+
+    # Try JSON config files first
+    for name in [".codepackrc", ".codepackrc.json", "codepack.json"]:
+        cfg_file = target / name
+        if cfg_file.is_file():
+            try:
+                return json.loads(cfg_file.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                pass
+
+    # Try pyproject.toml [tool.codepack]
+    pyproject = target / "pyproject.toml"
+    if pyproject.is_file():
+        try:
+            try:
+                import tomllib
+                with open(pyproject, "rb") as f:
+                    data = tomllib.load(f)
+                    return data.get("tool", {}).get("codepack", {})
+            except ImportError:
+                # Fallback simple extractor for python < 3.11
+                text = pyproject.read_text(encoding="utf-8", errors="ignore")
+                if "[tool.codepack]" in text:
+                    sec = text.split("[tool.codepack]")[1].split("[")[0]
+                    res = {}
+                    for line in sec.splitlines():
+                        if "=" in line and not line.strip().startswith("#"):
+                            k, v = line.split("=", 1)
+                            res[k.strip()] = json.loads(v.strip())
+                    return res
+        except Exception:
+            pass
+
+    return {}
