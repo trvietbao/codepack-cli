@@ -1,0 +1,47 @@
+# Version Control & IDE
+.git/
+.svn/
+.hg/
+.vscode/
+.idea/
+
+# Graphify & AI Cache Artifacts
+graphify-out/
+.graphify_analysis.json
+.graphify_labels.json
+
+# Build Directories & Compilation Artifacts
+build/
+dist/
+target/
+bin/
+obj/
+out/
+*.egg-info/
+*.o
+*.obj
+*.exe
+*.dll
+
+# Dependencies & Environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+node_modules/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs & Temporary Files
+*.log
+*.tmp
+*.temp
+*.swp
+*.bak
+.DS_Store
+Thumbs.db

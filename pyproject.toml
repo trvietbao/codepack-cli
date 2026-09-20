@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "codepack-cli"
+version = "0.1.0"
+description = "A fast, zero-dependency CLI tool and library to pack codebases into LLM-optimized context for OpenAI Codex, ChatGPT, and Claude."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [
+    { name = "trvietbao" }
+]
+keywords = [
+    "llm",
+    "codex",
+    "openai",
+    "codebase-packer",
+    "prompt-generator",
+    "cli",
+    "developer-tools",
+    "code-to-prompt",
+    "context-window"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent"
+]
+
+[project.urls]
+Homepage = "https://github.com/trvietbao/codepack-cli"
+Repository = "https://github.com/trvietbao/codepack-cli"
+Issues = "https://github.com/trvietbao/codepack-cli/issues"
+
+[project.scripts]
+codepack = "codepack.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
